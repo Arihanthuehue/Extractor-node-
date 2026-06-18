@@ -69,6 +69,11 @@ console.log(`Using BASE_URL for file serving: ${global.baseUrl}`);
 // Serve static files from 'public' directory (index.html at root '/')
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Swagger API Documentation Setup
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Register routes
 app.use('/', require('./routes/index'));
 
