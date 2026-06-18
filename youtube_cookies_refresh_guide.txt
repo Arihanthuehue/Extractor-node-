@@ -1,0 +1,96 @@
+YOUTUBE COOKIES REFRESH GUIDE
+==============================
+Use this guide whenever YouTube stops working due to expired cookies.
+
+
+STEP 1 - EXPORT COOKIES FROM BROWSER
+--------------------------------------
+1. Open Google Chrome
+2. Make sure you are logged into your YouTube/Google account
+3. Go to https://www.youtube.com
+4. Click the "Get cookies.txt LOCALLY" extension icon in the toolbar
+5. Make sure it says "Current Site" not "All Sites"
+6. Click Export / Download
+7. A file called cookies.txt will be saved to your Downloads folder
+
+
+STEP 2 - FILTER THE COOKIES FILE
+----------------------------------
+Open PowerShell and run this command to filter only YouTube and Google cookies:
+
+Get-Content "C:\Users\Admin\Downloads\cookies.txt" | Where-Object { $_ -match "^#" -or $_ -match "\.youtube\.com" -or $_ -match "\.google\.com$" } | Set-Content "C:\Users\Admin\Downloads\cookies_filtered.txt"
+
+Then check the file size in bytes:
+
+(Get-Item "C:\Users\Admin\Downloads\cookies_filtered.txt").Length
+
+If the size is under 24576 bytes (24KB), skip to Step 4.
+If the size is over 24576 bytes, continue to Step 3.
+
+
+STEP 3 - IF FILE IS STILL TOO LARGE (base64 would exceed 32768 chars)
+-----------------------------------------------------------------------
+Run a stricter filter to only keep the most essential cookie lines:
+
+Get-Content "C:\Users\Admin\Downloads\cookies_filtered.txt" | Where-Object { $_ -match "^#" -or $_ -match "CONSENT|HSID|SSID|APISID|SAPISID|SID|SIDCC|__Secure-1PSID|__Secure-3PSID|__Secure-1PAPISID|__Secure-3PAPISID|LOGIN_INFO|VISITOR_INFO1_LIVE|YSC|PREF" } | Set-Content "C:\Users\Admin\Downloads\cookies_minimal.txt"
+
+Then use cookies_minimal.txt instead of cookies_filtered.txt in Step 4.
+
+Check its size:
+
+(Get-Item "C:\Users\Admin\Downloads\cookies_minimal.txt").Length
+
+
+STEP 4 - ENCODE TO BASE64 AND COPY TO CLIPBOARD
+-------------------------------------------------
+If using the filtered file:
+
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\Users\Admin\Downloads\cookies_filtered.txt")) | Set-Clipboard
+
+If using the minimal file (from Step 3):
+
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\Users\Admin\Downloads\cookies_minimal.txt")) | Set-Clipboard
+
+The base64 string is now in your clipboard.
+
+
+STEP 5 - UPDATE THE ENVIRONMENT VARIABLE ON YOUR SERVER
+---------------------------------------------------------
+Go to your server's environment configuration (however your hosting
+provider or server admin panel exposes environment variables) and
+update the value of:
+
+    YOUTUBE_COOKIES_B64
+
+Delete the old value and paste the new base64 string.
+Save the changes.
+
+
+STEP 6 - RESTART THE SERVER
+-----------------------------
+After updating the environment variable, restart the server or
+redeploy the application so it picks up the new cookie value.
+Wait for it to fully start up and check the logs for this line:
+
+    Successfully decoded and wrote YouTube cookies to /app/youtube_cookies.txt
+
+This confirms the new cookies loaded correctly.
+
+
+STEP 7 - TEST
+--------------
+Send a YouTube URL through the service and check if it works.
+If it still fails, the cookies may need to be exported again
+while more actively logged in or after watching a video on YouTube.
+
+
+NOTES
+------
+- Cookies typically expire every few weeks to a few months
+- Always export cookies while actively logged into YouTube in Chrome
+- The YTDLP_PATH variable should NOT be set on the server
+- The server uses the yt-dlp binary installed directly in the container
+- Locally on Windows, add this to your .env file:
+  YTDLP_PATH=C:\Users\Admin\AppData\Roaming\Python\Python313\Scripts\yt-dlp.exe
+- The .env file should be in .gitignore and never committed to git
+- node_modules should also be in .gitignore
