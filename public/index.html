@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INSTAGRAM RESOLVER // DOWNLOADER</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            padding: 2rem;
+            line-height: 1.4;
+        }
+
+        /* Top Header Area */
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .header-left .header-title {
+            font-family: 'Arial Black', Arial, Helvetica, sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-left .header-subtitle {
+            font-size: 0.8rem;
+            color: #888888;
+            letter-spacing: 1px;
+        }
+
+        .header-right .status-badge {
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            color: #888888;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        /* Divider */
+        .divider {
+            border-top: 1px solid #ffffff;
+            margin: 1rem 0 2rem 0;
+            opacity: 0.85;
+        }
+
+        /* Layout Grid */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 950px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Panel Styling */
+        .panel {
+            border: 1px solid #ffffff;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background-color: #000000;
+        }
+
+        .panel-header {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-bottom: 1.25rem;
+            letter-spacing: 1px;
+        }
+
+        .label {
+            font-size: 0.85rem;
+            color: #ffffff;
+            margin-bottom: 0.75rem;
+            display: block;
+            font-weight: bold;
+        }
+
+        /* Input Form */
+        textarea {
+            width: 100%;
+            background-color: #000000;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+            padding: 1rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            outline: none;
+            margin-bottom: 1.25rem;
+        }
+
+        textarea:focus {
+            border-color: #ffffff;
+        }
+
+        /* Terminal block button */
+        .btn-terminal {
+            width: 100%;
+            background-color: #000000;
+            border: 1px solid #ffffff;
+            color: #ffffff;
+            padding: 0.85rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: background-color 0.15s, color 0.15s;
+        }
+
+        .btn-terminal:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        .btn-terminal:disabled {
+            border-color: rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.25);
+            cursor: not-allowed;
+        }
+
+        .btn-terminal:disabled:hover {
+            background-color: #000000;
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* System parameters */
+        .sys-params-container {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.25rem;
+            font-size: 0.85rem;
+            color: #888888;
+        }
+
+        .sys-params-title {
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            color: #888888;
+            font-size: 0.85rem;
+        }
+
+        .sys-params-list {
+            list-style: none;
+        }
+
+        .sys-params-list li {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        /* Loading */
+        .loading-box {
+            display: none;
+            border: 1px solid #ffffff;
+            padding: 1.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-bottom: 2rem;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Error box */
+        .error-box {
+            display: none;
+            border: 1px solid #ef4444;
+            background-color: #000000;
+            color: #ef4444;
+            padding: 1rem 1.25rem;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Output Metadata */
+        .meta-container {
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .meta-row {
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-label {
+            color: #888888;
+        }
+
+        .meta-val {
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .output-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 1rem 0;
+        }
+
+        /* Items Container */
+        .item-box {
+            margin-top: 1.5rem;
+        }
+
+        .media-border-container {
+            border: 1px solid #ffffff;
+            background-color: #000000;
+            margin-bottom: 0.75rem;
+            position: relative;
+        }
+
+        .media-border-container video, 
+        .media-border-container img {
+            width: 100%;
+            display: block;
+            max-height: 500px;
+            object-fit: contain;
+        }
+
+        /* Info string below media player */
+        .item-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #888888;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            padding: 0 0.25rem;
+        }
+
+        /* Action buttons below item */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-action {
+            background-color: #000000;
+            border: 1px solid #ffffff;
+            color: #ffffff;
+            padding: 0.75rem;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.15s, color 0.15s;
+        }
+
+        .btn-action:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        /* Session History */
+        .history-panel {
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .history-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #888888;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .history-item {
+            font-size: 0.8rem;
+            color: #888888;
+            cursor: pointer;
+            text-decoration: underline;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header area -->
+    <div class="header-container">
+        <div class="header-left">
+            <h1 class="header-title">INSTAGRAM RESOLVER // DOWNLOADER</h1>
+            <div class="header-subtitle">V1.0.0 // RAW STREAMING PASSTHROUGH // NO CACHING</div>
+        </div>
+        <div class="header-right">
+            <span class="status-badge">SYS_STATUS: ACTIVE</span>
+        </div>
+    </div>
+
+    <!-- Divider Line -->
+    <div class="divider"></div>
+
+    <!-- Main Grid -->
+    <div class="grid-layout">
+        
+        <!-- Left Side Column -->
+        <div class="column-left">
+            
+            <!-- Target Resolver Panel -->
+            <div class="panel">
+                <div class="panel-header">[01] // INSTAGRAM TARGET</div>
+                <form id="extract-form">
+                    <label for="url-input" class="label">INPUT (URL OR EMBED HTML):</label>
+                    <textarea 
+                        id="url-input" 
+                        rows="8" 
+                        placeholder="https://www.instagram.com/reel/...&#10;or paste embed code here" 
+                        required
+                    ></textarea>
+                    <button type="submit" id="btn-submit" class="btn-terminal">EXTRACT MEDIA</button>
+                </form>
+            </div>
+
+            <!-- System Parameters panel -->
+            <div class="sys-params-container">
+                <div class="sys-params-title">SYSTEM PARAMETERS:</div>
+                <ul class="sys-params-list">
+                    <li>* Storage mode: Live buffer (nothing persistent written to server disk).</li>
+                    <li>* Processing pipeline: Pass-through streaming without re-encoding.</li>
+                    <li>* Security wall: No login workarounds. If target requires authentication, it fails cleanly.</li>
+                    <li>* Media loading: Content is served via internal proxy route to prevent CORS blocks.</li>
+                </ul>
+            </div>
+
+            <!-- Session History panel -->
+            <div id="history-panel" class="history-panel" style="display: none;">
+                <div class="history-title">[03] // SESSION HISTORY</div>
+                <div id="history-list" class="history-list">
+                    <!-- History lines placed here -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Side Column -->
+        <div class="column-right">
+            
+            <!-- Error message container -->
+            <div id="error-box" class="error-box"></div>
+
+            <!-- Standby Loading Panel -->
+            <div id="loader" class="loading-box">
+                [SYSTEM] // RESOLVING TARGET MEDIA... STANDBY
+            </div>
+
+            <!-- Output Panel -->
+            <div id="output-panel" class="panel" style="display: none;">
+                <div class="panel-header">[02] // SYSTEM OUTPUT</div>
+                
+                <div class="meta-container">
+                    <div class="meta-row">
+                        <span class="meta-label">POST ID:</span> 
+                        <span id="meta-post-id" class="meta-value">-</span>
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">MODE:</span> 
+                        <span id="meta-mode" class="meta-value">-</span>
+                    </div>
+                </div>
+
+                <div class="output-divider"></div>
+
+                <div id="items-list">
+                    <!-- Extracted media cards placed here -->
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const form = document.getElementById('extract-form');
+        const urlInput = document.getElementById('url-input');
+        const btnSubmit = document.getElementById('btn-submit');
+        const loader = document.getElementById('loader');
+        const errorBox = document.getElementById('error-box');
+        const outputPanel = document.getElementById('output-panel');
+        
+        // Metadata elements
+        const metaPostId = document.getElementById('meta-post-id');
+        const metaMode = document.getElementById('meta-mode');
+        const itemsList = document.getElementById('items-list');
+
+        // History tracker variables
+        const historyPanel = document.getElementById('history-panel');
+        const historyList = document.getElementById('history-list');
+        const sessionHistory = [];
+
+        // Mapped error messages from backend codes
+        const ERROR_MAPPING = {
+            'youtube_blocked': '[ERROR] // youtube_blocked: Bot detection triggered. Configured cookies are missing or invalid.',
+            'private_post': '[ERROR] // private_post: Target requires authorization. Content is private or restricted.',
+            'invalid_url': '[ERROR] // invalid_url: Input contains invalid URL structure or HTML selectors.',
+            'resolve_failed': '[ERROR] // resolve_failed: Media extractor failed. Check source connection or availability.'
+        };
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const val = urlInput.value.trim();
+            if (!val) return;
+
+            await executeExtraction(val);
+        });
+
+        async function executeExtraction(inputString) {
+            // Reset output view states
+            errorBox.style.display = 'none';
+            outputPanel.style.display = 'none';
+            loader.style.display = 'block';
+            btnSubmit.disabled = true;
+
+            try {
+                const response = await fetch('/extract', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ input: inputString })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Connection error received from server.');
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    const errorDetails = ERROR_MAPPING[data.error] || `[ERROR] // ${data.error || 'resolve_failed'}: Action aborted.`;
+                    showErrorMessage(errorDetails);
+                    return;
+                }
+
+                // Add item to history panel if it's new
+                if (sessionHistory[0] !== inputString) {
+                    sessionHistory.unshift(inputString);
+                    if (sessionHistory.length > 5) sessionHistory.pop();
+                    updateHistoryUI();
+                }
+
+                renderSystemOutput(data);
+
+            } catch (err) {
+                console.error("Extraction error:", err);
+                showErrorMessage('[ERROR] // connection_failure: Server communication aborted. Review browser logs.');
+            } finally {
+                loader.style.display = 'none';
+                btnSubmit.disabled = false;
+            }
+        }
+
+        function showErrorMessage(msg) {
+            errorBox.innerText = msg;
+            errorBox.style.display = 'block';
+            loader.style.display = 'none';
+            btnSubmit.disabled = false;
+        }
+
+        function renderSystemOutput(data) {
+            metaPostId.innerText = data.post_id || 'N/A';
+            metaMode.innerText = data.is_carousel ? 'CAROUSEL MEDIA' : 'SINGLE MEDIA';
+
+            itemsList.innerHTML = '';
+
+            if (data.items && data.items.length > 0) {
+                const totalCount = data.items.length;
+                
+                data.items.forEach(item => {
+                    const itemContainer = document.createElement('div');
+                    itemContainer.className = 'item-box';
+
+                    // Media Wrapper Box with white border
+                    const mediaWrapper = document.createElement('div');
+                    mediaWrapper.className = 'media-border-container';
+
+                    if (item.type === 'video') {
+                        const video = document.createElement('video');
+                        video.src = item.preview_url;
+                        video.controls = true;
+                        video.playsInline = true;
+                        video.preload = 'metadata';
+                        if (item.thumbnail_url) {
+                            video.poster = item.thumbnail_url;
+                        }
+                        mediaWrapper.appendChild(video);
+                    } else {
+                        const img = document.createElement('img');
+                        img.src = item.preview_url || item.thumbnail_url;
+                        img.alt = `Media ${item.index}`;
+                        mediaWrapper.appendChild(img);
+                    }
+                    itemContainer.appendChild(mediaWrapper);
+
+                    // Monospace details index line below player box
+                    const infoRow = document.createElement('div');
+                    infoRow.className = 'item-info-row';
+                    
+                    const padIdx = String(item.index + 1).padStart(3, '0');
+                    const padTotal = String(totalCount).padStart(3, '0');
+                    
+                    infoRow.innerHTML = `
+                        <span>INDEX: ${padIdx}/${padTotal}</span>
+                        <span>TYPE: ${item.type.toUpperCase()}</span>
+                    `;
+                    itemContainer.appendChild(infoRow);
+
+                    // Download direct endpoint route path
+                    let downloadRoute = `/download?url=${encodeURIComponent(item.preview_url)}&type=${item.type}&filename=media_${item.index + 1}.${item.type === 'video' ? 'mp4' : 'jpg'}`;
+                    if (item.needs_merge && item.video_url && item.audio_url) {
+                        downloadRoute = `/download?url=${encodeURIComponent(item.video_url)}&audio_url=${encodeURIComponent(item.audio_url)}&type=video&filename=merged_${item.index + 1}.mp4`;
+                    }
+
+                    // Bottom Action buttons
+                    const actionsGrid = document.createElement('div');
+                    actionsGrid.className = 'actions-grid';
+                    actionsGrid.innerHTML = `
+                        <a href="${downloadRoute}" target="_blank" class="btn-action">DOWNLOAD ${item.type.toUpperCase()}</a>
+                        <button class="btn-action" onclick="copyValueToClipboard('${item.preview_url}', this)">COPY LINK</button>
+                    `;
+                    itemContainer.appendChild(actionsGrid);
+
+                    itemsList.appendChild(itemContainer);
+                });
+            }
+
+            outputPanel.style.display = 'block';
+        }
+
+        async function copyValueToClipboard(text, buttonElement) {
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalLabel = buttonElement.innerText;
+                buttonElement.innerText = 'COPIED!';
+                
+                setTimeout(() => {
+                    buttonElement.innerText = originalLabel;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy action failed: ', err);
+            }
+        }
+
+        function updateHistoryUI() {
+            if (sessionHistory.length === 0) {
+                historyPanel.style.display = 'none';
+                return;
+            }
+
+            historyList.innerHTML = '';
+            sessionHistory.forEach(historyUrl => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'history-item';
+                itemDiv.innerText = historyUrl;
+                itemDiv.title = historyUrl;
+                itemDiv.onclick = () => {
+                    urlInput.value = historyUrl;
+                    executeExtraction(historyUrl);
+                };
+                historyList.appendChild(itemDiv);
+            });
+
+            historyPanel.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
