@@ -1,0 +1,16 @@
+# Ignore git repository history
+.git
+.gitignore
+
+# Ignore node_modules (prevents overriding container-installed packages with host-compiled ones)
+node_modules
+
+# Ignore local environment variables
+.env
+.env.*
+.env.local
+
+# Ignore logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
