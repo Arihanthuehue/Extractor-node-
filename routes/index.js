@@ -59,6 +59,14 @@ function parseInputToUrl(inputStr) {
                 // Assemble back exactly like urlunparse to preserve the clean URL
                 return `${parsed.protocol}//${parsed.host}${parsed.pathname}${newQueryStr}${parsed.hash}`;
             }
+
+            if (host.includes("linkedin.com")) {
+                let pathname = parsed.pathname;
+                if (pathname.includes("/embed/feed/update/")) {
+                    pathname = pathname.replace("/embed/feed/update/", "/feed/update/");
+                }
+                return `${parsed.protocol}//${parsed.host}${pathname}`;
+            }
         } catch (e) {
             // Ignore parse errors and let the split fallback run
         }
@@ -79,6 +87,20 @@ function parseInputToUrl(inputStr) {
     if (iframe.length > 0) {
         const src = iframe.first().attr('src').trim();
         if (src.includes("youtube.com") || src.includes("youtu.be")) {
+            let srcUrl = src;
+            if (srcUrl.startsWith("//")) {
+                srcUrl = "https:" + srcUrl;
+            } else if (!srcUrl.startsWith("http://") && !srcUrl.startsWith("https://")) {
+                srcUrl = "https://" + srcUrl;
+            }
+            return parseInputToUrl(srcUrl);
+        }
+    }
+
+    // Check for LinkedIn iframe embed
+    if (iframe.length > 0) {
+        const src = iframe.first().attr('src').trim();
+        if (src.includes("linkedin.com")) {
             let srcUrl = src;
             if (srcUrl.startsWith("//")) {
                 srcUrl = "https:" + srcUrl;
