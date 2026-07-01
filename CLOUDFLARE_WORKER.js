@@ -3,7 +3,7 @@ export default {
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405 });
     }
-    const { shortcode, lsd } = await request.json();
+    const { shortcode, lsd, cookies, csrftoken } = await request.json();
     if (!shortcode) {
       return new Response(JSON.stringify({ error: 'missing_shortcode' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
@@ -17,6 +17,8 @@ export default {
       'Origin': 'https://www.instagram.com',
       'Referer': 'https://www.instagram.com/',
     };
+    if (cookies) headers['Cookie'] = cookies;
+    if (csrftoken) headers['X-CSRFToken'] = csrftoken;
     const embedUrl = `https://www.instagram.com/reel/${shortcode}/embed/captioned/`;
     const resp = await fetch(embedUrl, { headers });
     const html = await resp.text();
