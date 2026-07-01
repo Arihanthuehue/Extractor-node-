@@ -1,0 +1,88 @@
+FILES CHANGED:
+- lib/ytdlp.js
+- Dockerfile
+
+=========================================
+FILE: lib/ytdlp.js
+=========================================
+
+1. Import Statement
+-------------------
+REPLACED:
+const { spawn } = require('child_process');
+
+WITH:
+const { spawn } = require('child_process');
+const fs = require('fs');
+
+2. extractMetadata Function Signature
+-------------------------------------
+REPLACED:
+function extractMetadata(url, isYoutube, cookiesPath) {
+
+WITH:
+function extractMetadata(url, isYoutube) {
+
+3. extractMetadata docstring
+----------------------------
+REPLACED:
+ * @param {string|null} cookiesPath Path to the decoded cookies file
+
+WITH:
+(Removed/Deleted)
+
+4. YouTube Arguments Handling (Replaced cookies with PO Token/Plugin)
+-------------------------------------------------------------
+REPLACED:
+        if (isYoutube) {
+            if (cookiesPath) {
+                args.push('--cookies', cookiesPath);
+            }
+        }
+
+WITH:
+        if (isYoutube) {
+            args.push('--remote-components', 'ejs:github');
+            args.push('--extractor-args', 'youtube:player_client=android,ios,web_embedded,mweb');
+            const potScriptPath = '/opt/bgutil-ytdlp-pot-provider/server';
+            if (fs.existsSync(potScriptPath)) {
+                args.push('--plugin-dirs', '/app/yt-dlp-plugins');
+                args.push('--extractor-args', `youtubepot-bgutilscript:script_path=${potScriptPath}`);
+            }
+        }
+
+
+=========================================
+FILE: Dockerfile
+=========================================
+
+1. System Packages Installation
+-------------------------------
+REPLACED:
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    curl \
+    unzip \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WITH:
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    curl \
+    git \
+    unzip \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+2. Installing and compiling bgutil provider plugin
+--------------------------------------------------
+ADDED:
+RUN mkdir -p /app/yt-dlp-plugins \
+    && curl -L https://github.com/Brainicism/bgutil-ytdlp-pot-provider/releases/latest/download/bgutil-ytdlp-pot-provider.zip \
+       -o /app/yt-dlp-plugins/bgutil-ytdlp-pot-provider.zip
+
+RUN git clone --depth 1 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git /opt/bgutil-ytdlp-pot-provider \
+    && cd /opt/bgutil-ytdlp-pot-provider/server \
+    && npm ci \
+    && npx tsc

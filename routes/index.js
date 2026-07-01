@@ -9,6 +9,7 @@ const { tokenMapping, deleteTokenFile } = require('../lib/state');
 const { extractMetadata } = require('../lib/ytdlp');
 const { mergeVideoAudio, downloadVideoToTempFile } = require('../lib/ffmpeg');
 const { mapInstagramError, mapYoutubeError } = require('../lib/errors');
+const { resolveInstagramGraphQL } = require('../lib/instagram-graphql');
 
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
@@ -495,15 +496,31 @@ router.post('/extract', async (req, res) => {
         console.log(`Resolved URL: ${resolvedUrl}`);
 
         const isYoutube = resolvedUrl.includes("youtube.com") || resolvedUrl.includes("youtu.be");
+        const isInstagram = resolvedUrl.includes("instagram.com/p/") || resolvedUrl.includes("instagram.com/reel/") || resolvedUrl.includes("instagram.com/tv/");
+        
         let info;
-        try {
-            info = await extractMetadata(resolvedUrl, isYoutube, global.youtubeCookiesPath);
-        } catch (ytdlErr) {
-            const stderr = ytdlErr.message;
-            if (isYoutube) {
-                throw new Error(mapYoutubeError(stderr));
-            } else {
-                throw new Error(mapInstagramError(stderr));
+        if (isInstagram) {
+            try {
+                info = await resolveInstagramGraphQL(resolvedUrl);
+            } catch (graphqlErr) {
+                console.log(`Instagram GraphQL resolve failed: ${graphqlErr.message}. Falling back to yt-dlp.`);
+                try {
+                    info = await extractMetadata(resolvedUrl, false, global.youtubeCookiesPath);
+                } catch (ytdlErr) {
+                    const stderr = ytdlErr.message;
+                    throw new Error(mapInstagramError(stderr));
+                }
+            }
+        } else {
+            try {
+                info = await extractMetadata(resolvedUrl, isYoutube, global.youtubeCookiesPath);
+            } catch (ytdlErr) {
+                const stderr = ytdlErr.message;
+                if (isYoutube) {
+                    throw new Error(mapYoutubeError(stderr));
+                } else {
+                    throw new Error(mapInstagramError(stderr));
+                }
             }
         }
 
