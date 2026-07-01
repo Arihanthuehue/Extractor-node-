@@ -3,7 +3,7 @@ export default {
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405 });
     }
-    const { shortcode } = await request.json();
+    const { shortcode, lsd } = await request.json();
     if (!shortcode) {
       return new Response(JSON.stringify({ error: 'missing_shortcode' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
@@ -11,6 +11,11 @@ export default {
       'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'en-US,en;q=0.9',
+      'X-IG-App-ID': '936619743392459',
+      'X-FB-LSD': lsd || 'AVqbxe3J_YA',
+      'X-ASBD-ID': '129477',
+      'Origin': 'https://www.instagram.com',
+      'Referer': 'https://www.instagram.com/',
     };
     const embedUrl = `https://www.instagram.com/reel/${shortcode}/embed/captioned/`;
     const resp = await fetch(embedUrl, { headers });
