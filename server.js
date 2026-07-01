@@ -80,4 +80,9 @@ app.use('/', require('./routes/index'));
 // Run server
 app.listen(RUNNING_PORT, () => {
     console.log(`Server running on port ${RUNNING_PORT}`);
+    if (process.env.INSTAGRAM_SESSION_ID) {
+        console.log('Instagram: using session cookies from environment variables');
+    } else {
+        console.warn('Instagram: no INSTAGRAM_SESSION_ID set, will attempt anonymous bootstrap');
+    }
 });
