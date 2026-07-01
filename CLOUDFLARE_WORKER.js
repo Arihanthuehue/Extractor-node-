@@ -26,40 +26,14 @@ export default {
       .map(c => c.trim().split(';')[0].trim())
       .filter(c => c.includes('='));
     const cookieString = cookiePairs.join('; ');
-    const csrfMatch = cookieString.match(/csrftoken=([^;]+)/);
-    const csrftoken = csrfMatch ? csrfMatch[1] : '';
-
-    // GraphQL call
-    const params = new URLSearchParams();
-    params.set('doc_id', docId);
-    params.set('variables', JSON.stringify({ shortcode }));
-
-    const gqlResp = await fetch('https://www.instagram.com/api/graphql', {
-      method: 'POST',
-      headers: {
-        ...baseHeaders,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Cookie': cookieString,
-        'X-CSRFToken': csrftoken,
-        'Sec-Fetch-Site': 'same-origin',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Dest': 'empty',
-      },
-      body: params.toString(),
-    });
-
-    const contentType = gqlResp.headers.get('content-type') || '';
-    if (!contentType.includes('json')) {
-      const text = await gqlResp.text();
-      return new Response(JSON.stringify({
-        error: 'non_json_response',
-        preview: text.slice(0, 300)
-      }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+    const embedUrl = `https://www.instagram.com/reel/${shortcode}/embed/captioned/`;
+    const resp = await fetch(embedUrl, { headers: baseHeaders });
+    const html = await resp.text();
+    const match = html.match(/"video_url":"(https:\/\/[^"]+)"/);
+    const videoUrl = match ? match[1].replace(/\\/g, '') : null;
+    if (!videoUrl) {
+      return new Response(JSON.stringify({ error: 'video_url_not_found', preview: html.slice(0, 300) }), { status: 502, headers: { 'Content-Type': 'application/json' } });
     }
-
-    const data = await gqlResp.json();
-    return new Response(JSON.stringify(data), {
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return new Response(JSON.stringify({ videoUrl }), { headers: { 'Content-Type': 'application/json' } });
   }
 };
